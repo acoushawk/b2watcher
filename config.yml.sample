@@ -1,0 +1,13 @@
+account_id: ********
+app_key: **************************
+con_connections: 4
+log_dir: /var/log
+folders:
+  - bucket_id: **************
+    b2_folder: Testing
+    root_folder: /backup/folder
+    monitor: true
+    hour: 0
+    minute: 1
+    delete_after_upload: false
+
