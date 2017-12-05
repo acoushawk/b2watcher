@@ -12,10 +12,10 @@ import (
 	"time"
 )
 
-var getSHAChan = make(chan File, 50)
-var processFileChan = make(chan File, 50)
-var completedFileChan = make(chan FilePart, 50)
-var uploadFilePart = make(chan FilePart, 500)
+var getSHAChan = make(chan File)
+var processFileChan = make(chan File, 5)
+var completedFileChan = make(chan bool)
+var uploadFilePart = make(chan FilePart)
 var exitChan = make(chan bool)
 var fileCompleteQueue FileQueue
 
@@ -29,8 +29,8 @@ func daemon() {
 	log.SetOutput(f)
 	for i := 1; i <= config.ConnConnections; i++ {
 		go sendFilePart()
-		go getSHA()
 	}
+	go getSHA()
 	go sendFile()
 	for _, folder := range config.Folders {
 		if folder.Monitor == true {
@@ -43,8 +43,7 @@ func daemon() {
 	}
 	for {
 		select {
-		case filePart := <-completedFileChan:
-			fileCompleteQueue.updateFile(filePart)
+		case <-completedFileChan:
 			for _, file := range fileCompleteQueue.Files {
 				complete := true
 				for _, part := range file.Parts {
@@ -77,7 +76,6 @@ func getSHA() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			defer f.Close()
 			info, _ := f.Stat()
 			file.FileSize = info.Size()
 			if file.FileSize > instance.RecPartSize {
@@ -85,6 +83,7 @@ func getSHA() {
 				chunkSize := instance.RecPartSize
 				totalPartsNum := uint64(math.Ceil(float64(file.FileSize) / float64(instance.RecPartSize)))
 				for i := int64(0); i < int64(totalPartsNum); i++ {
+					log.Println("Working on part", i, " of file ", file.FilePath)
 					var filePart FilePart
 					var buffer []byte
 					if (file.FileSize - bytesSent) < chunkSize {
@@ -99,6 +98,7 @@ func getSHA() {
 						fmt.Println(err)
 					}
 					fileSHA := fmt.Sprintf("%x", h.Sum(nil))
+
 					filePart.ChunkSize = chunkSize
 					filePart.Number = i + 1
 					filePart.SHA = fileSHA
@@ -125,6 +125,7 @@ func getSHA() {
 			file.SHA = fileSHA
 			log.Println("Starting upload of ", file.FilePath)
 			processFileChan <- file
+			f.Close()
 		}
 	}
 }
@@ -171,12 +172,13 @@ func sendFilePart() {
 			if (filePart.Number == 1) && (filePart.ChunkSize < instance.RecPartSize) {
 				result = filePart.b2UploadFile()
 			} else {
-				result = filePart.b2UploadPart()
+				result = b2UploadPart(filePart)
 			}
 			if result == 200 {
-				log.Println("Finished Part ", filePart.Number, " of file ", filePart.FileName)
+				log.Println("Finished Part ", filePart.Number, " of file ", filePart.Path)
 				filePart.Complete = true
-				completedFileChan <- filePart
+				fileCompleteQueue.updateFile(filePart)
+				completedFileChan <- true
 			} else {
 				fmt.Print("File Returned Code   -----    ")
 				fmt.Println(result)

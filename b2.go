@@ -144,12 +144,11 @@ func (f *File) b2UploadPartURL() {
 
 }
 
-func (f *FilePart) b2UploadPart() int {
+func b2UploadPart(f FilePart) int {
 	var bufferUp []byte
 	log.Println("Uploading part ", f.Number, " of file ", f.Path)
 	bufferUp = make([]byte, f.ChunkSize)
 	openFile, _ := os.Open(f.Path)
-	defer openFile.Close()
 	seek := ((f.Number - 1) * instance.RecPartSize)
 	openFile.Seek(seek, 0)
 	// go func() {
@@ -167,10 +166,12 @@ func (f *FilePart) b2UploadPart() int {
 	if err != nil {
 		fmt.Println("Error in send")
 		fmt.Println(err)
+		openFile.Close()
 		return resp.StatusCode
 	}
+	resp.Body.Close()
+	openFile.Close()
 	return resp.StatusCode
-
 }
 
 func (f *File) b2FinishLargeFile() {
@@ -217,7 +218,6 @@ func (f *FilePart) b2UploadFile() int {
 	log.Println("Starting upload of file ", f.FileName)
 	bufferUp = make([]byte, f.ChunkSize)
 	openFile, _ := os.Open(f.Path)
-	defer openFile.Close()
 	openFile.Read(bufferUp)
 	url := f.URL
 	req, _ := http.NewRequest("POST", url, bytes.NewReader(bufferUp))
@@ -230,7 +230,9 @@ func (f *FilePart) b2UploadFile() int {
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Println("There was an error sending part ", f.Number, " of file ", f.FileName)
+		openFile.Close()
 		return resp.StatusCode
 	}
+	openFile.Close()
 	return resp.StatusCode
 }
