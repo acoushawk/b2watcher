@@ -23,7 +23,7 @@ func daemon() {
 	var monitor bool
 	f, err := os.OpenFile((config.LogDir + "/b2watcher.log"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 	defer f.Close()
 	log.SetOutput(f)

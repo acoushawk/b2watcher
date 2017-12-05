@@ -73,7 +73,7 @@ func main() {
 	for _, folder := range config.Folders {
 		folder.b2Files.b2GetCurrentFiles(*folder)
 	}
-	config.initialScan()
+	go config.initialScan()
 	daemon()
 }
 
