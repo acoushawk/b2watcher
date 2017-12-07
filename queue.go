@@ -6,15 +6,6 @@ func (q *FileQueue) addFile(file File) {
 	q.Files = append(q.Files, file)
 }
 
-// func (q *FileQueue) processQueue(outChan chan File) {
-// 	q.Lock()
-// 	defer q.Unlock()
-// 	for _, file := range q.Files {
-// 		outChan <- file
-// 	}
-// 	q.Files = nil
-// }
-
 func (q *FileQueue) updateFile(filePart FilePart) {
 	q.Lock()
 	defer q.Unlock()

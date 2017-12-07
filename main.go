@@ -47,7 +47,7 @@ type File struct {
 	FileID    string `json:"fileId"`
 	BucketID  string `json:"bucketId"`
 	Parts     []FilePart
-	UploadURL []B2UploadURL
+	UploadURL B2UploadURL
 }
 
 type FilePart struct {

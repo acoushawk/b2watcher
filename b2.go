@@ -126,9 +126,9 @@ func (f *File) b2StartLargeFile() {
 	json.NewDecoder(resp.Body).Decode(&f)
 }
 
-func (f *File) b2UploadPartURL() {
+func (f *FilePart) b2UploadPartURL() {
 	var uploadURL B2UploadURL
-	fileID := map[string]string{"fileId": f.FileID}
+	fileID := map[string]string{"fileId": f.ParentFileID}
 	body, _ := json.Marshal(fileID)
 	client := &http.Client{}
 	url := instance.APIURL + "/b2api/v1/b2_get_upload_part_url"
@@ -139,8 +139,8 @@ func (f *File) b2UploadPartURL() {
 		fmt.Println(err)
 	}
 	json.NewDecoder(resp.Body).Decode(&uploadURL)
-
-	f.UploadURL = append(f.UploadURL, uploadURL)
+	f.URL = uploadURL.UploadURL
+	f.AuthToken = uploadURL.AuthorizationToken
 
 }
 
@@ -210,7 +210,7 @@ func (f *File) b2UploadURL() {
 		fmt.Println("Error")
 	}
 	json.NewDecoder(resp.Body).Decode(&uploadURL)
-	f.UploadURL = append(f.UploadURL, uploadURL)
+	f.UploadURL = uploadURL
 }
 
 func (f *FilePart) b2UploadFile() int {

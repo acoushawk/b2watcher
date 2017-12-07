@@ -13,7 +13,7 @@ import (
 )
 
 var getSHAChan = make(chan File, 5)
-var processFileChan = make(chan File)
+var processFileChan = make(chan File, 5)
 var completedFileChan = make(chan FilePart)
 var uploadFilePart = make(chan FilePart)
 var exitChan = make(chan bool)
@@ -142,23 +142,21 @@ func sendFile() {
 				for _, part := range file.Parts {
 					part.ParentFileID = file.FileID
 					part.Path = file.RootPath + "/" + file.FilePath
-					part.URL = file.UploadURL[0].UploadURL
-					part.AuthToken = file.UploadURL[0].AuthorizationToken
+					part.URL = file.UploadURL.UploadURL
+					part.AuthToken = file.UploadURL.AuthorizationToken
 					b2FileName, _ := url.Parse(file.B2Path + "/" + file.FilePath)
 					part.FileName = b2FileName.String()
 					uploadFilePart <- part
 				}
 			} else {
 				file.b2StartLargeFile()
-				for i := 1; i <= len(file.Parts); i++ {
-					file.b2UploadPartURL()
-				}
+				// for i := 1; i <= len(file.Parts); i++ {
+				// 	file.b2UploadPartURL()
+				// }
 				fileCompleteQueue.addFile(file)
-				for i, part := range file.Parts {
+				for _, part := range file.Parts {
 					part.ParentFileID = file.FileID
 					part.Path = file.RootPath + "/" + file.FilePath
-					part.URL = file.UploadURL[i].UploadURL
-					part.AuthToken = file.UploadURL[i].AuthorizationToken
 					uploadFilePart <- part
 				}
 			}
@@ -174,15 +172,20 @@ func sendFilePart() {
 			if (filePart.Number == 1) && (filePart.ChunkSize < instance.RecPartSize) {
 				result = filePart.b2UploadFile()
 			} else {
+				filePart.b2UploadPartURL()
 				result = filePart.b2UploadPart()
 			}
 			if result == 200 {
 				log.Println("Finished Part ", filePart.Number, " of file ", filePart.Path)
 				filePart.Complete = true
 				completedFileChan <- filePart
-			} else {
-				fmt.Print("File Returned Code   -----    ")
-				fmt.Println(result)
+			} else if result == 401 {
+				// bad auth token
+				instance.b2Authorize()
+				filePart.b2UploadPartURL()
+				result = filePart.b2UploadPart()
+			} else if result == 400 {
+				// bad request
 			}
 		}
 	}
@@ -213,7 +216,7 @@ func folderMonitor(folder *Folders) {
 
 func queueMonitor() {
 	for {
-		time.Sleep(time.Second * 10)
+		time.Sleep(time.Minute * 5)
 		if len(fileCompleteQueue.Files) == 0 {
 			exitChan <- true
 		}
