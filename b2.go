@@ -144,7 +144,7 @@ func (f *File) b2UploadPartURL() {
 
 }
 
-func b2UploadPart(f FilePart) int {
+func (f *FilePart) b2UploadPart() int {
 	var bufferUp []byte
 	log.Println("Uploading part ", f.Number, " of file ", f.Path)
 	bufferUp = make([]byte, f.ChunkSize)

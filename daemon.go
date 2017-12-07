@@ -12,9 +12,9 @@ import (
 	"time"
 )
 
-var getSHAChan = make(chan File)
-var processFileChan = make(chan File, 5)
-var completedFileChan = make(chan bool)
+var getSHAChan = make(chan File, 5)
+var processFileChan = make(chan File)
+var completedFileChan = make(chan FilePart)
 var uploadFilePart = make(chan FilePart)
 var exitChan = make(chan bool)
 var fileCompleteQueue FileQueue
@@ -32,6 +32,7 @@ func daemon() {
 	}
 	go getSHA()
 	go sendFile()
+	// go api()
 	for _, folder := range config.Folders {
 		if folder.Monitor == true {
 			go folderMonitor(folder)
@@ -43,7 +44,8 @@ func daemon() {
 	}
 	for {
 		select {
-		case <-completedFileChan:
+		case filePart := <-completedFileChan:
+			fileCompleteQueue.updateFile(filePart)
 			for _, file := range fileCompleteQueue.Files {
 				complete := true
 				for _, part := range file.Parts {
@@ -148,10 +150,10 @@ func sendFile() {
 				}
 			} else {
 				file.b2StartLargeFile()
-				fileCompleteQueue.addFile(file)
 				for i := 1; i <= len(file.Parts); i++ {
 					file.b2UploadPartURL()
 				}
+				fileCompleteQueue.addFile(file)
 				for i, part := range file.Parts {
 					part.ParentFileID = file.FileID
 					part.Path = file.RootPath + "/" + file.FilePath
@@ -172,13 +174,12 @@ func sendFilePart() {
 			if (filePart.Number == 1) && (filePart.ChunkSize < instance.RecPartSize) {
 				result = filePart.b2UploadFile()
 			} else {
-				result = b2UploadPart(filePart)
+				result = filePart.b2UploadPart()
 			}
 			if result == 200 {
 				log.Println("Finished Part ", filePart.Number, " of file ", filePart.Path)
 				filePart.Complete = true
-				fileCompleteQueue.updateFile(filePart)
-				completedFileChan <- true
+				completedFileChan <- filePart
 			} else {
 				fmt.Print("File Returned Code   -----    ")
 				fmt.Println(result)
