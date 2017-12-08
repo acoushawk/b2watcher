@@ -173,10 +173,10 @@ func (f *FilePart) b2UploadPart() int {
 	client := http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Error in send")
+		fmt.Println("Error in send to ", url)
 		fmt.Println(err)
 		openFile.Close()
-		return resp.StatusCode
+		return 999
 	}
 	resp.Body.Close()
 	openFile.Close()

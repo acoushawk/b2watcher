@@ -186,6 +186,10 @@ func sendFilePart() {
 				result = filePart.b2UploadPart()
 			} else if result == 400 {
 				// bad request
+			} else if result == 999 {
+				instance.b2Authorize()
+				filePart.b2UploadPartURL()
+				result = filePart.b2UploadPart()
 			}
 		}
 	}
