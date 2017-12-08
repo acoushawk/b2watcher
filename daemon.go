@@ -32,7 +32,7 @@ func daemon() {
 	}
 	go getSHA()
 	go sendFile()
-	go api()
+	// go api()
 	for _, folder := range config.Folders {
 		if folder.Monitor == true {
 			go folderMonitor(folder)
