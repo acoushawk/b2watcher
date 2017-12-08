@@ -2,8 +2,6 @@ package main
 
 import (
 	"gorilla/mux"
-	"html/template"
-	"log"
 	"net/http"
 )
 
@@ -12,28 +10,39 @@ type APIConfig struct {
 	port      int
 }
 
-var templates map[string]*template.Template
-
 func api() {
-	loadTemplates()
 
 	r := mux.NewRouter()
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("/"))))
-	r.HandleFunc("/info", info)
+	// Routes consist of a path and a handler function.
+	r.HandleFunc("/", files)
 
 	// Bind to a port and pass our router in
-	log.Fatal(http.ListenAndServe(":8000", r))
+	http.ListenAndServe(":8000", r)
 }
 
-func info(w http.ResponseWriter, r *http.Request) {
-	if err := templates["template.html"].Execute(w, nil); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+func files(w http.ResponseWriter, r *http.Request) {
+	for _, folder := range config.Folders {
+		folder.b2Files.b2GetCurrentFiles(*folder)
+		listFiles := getFiles(folder.RootFolder)
+		for _, file := range listFiles {
+			var found bool
+			for _, file2 := range folder.b2Files.Files {
+				if (folder.B2Folder + file) == file2.FileName {
+					found = true
+				}
+			}
+			if !found {
+				var newFile File
+				newFile.RootPath = folder.RootFolder
+				newFile.B2Path = folder.B2Folder
+				newFile.FilePath = file[1:]
+				newFile.BucketID = folder.BucketID
+				w.Write([]byte(newFile.FilePath + "\n"))
+			}
+		}
 	}
-
 }
 
-func loadTemplates() {
-	// var baseTemplate = "templates/layout/_base.html"
-	templates = make(map[string]*template.Template)
-	templates["template.html"] = template.Must(template.ParseFiles("static/template.html"))
+func test(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Gorilla!\n"))
 }
