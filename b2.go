@@ -127,21 +127,30 @@ func (f *File) b2StartLargeFile() {
 }
 
 func (f *FilePart) b2UploadPartURL() {
-	var uploadURL B2UploadURL
-	fileID := map[string]string{"fileId": f.ParentFileID}
-	body, _ := json.Marshal(fileID)
-	client := &http.Client{}
-	url := instance.APIURL + "/b2api/v1/b2_get_upload_part_url"
-	req, _ := http.NewRequest("POST", url, bytes.NewReader(body))
-	req.Header.Set("Authorization", instance.AuthToken)
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	json.NewDecoder(resp.Body).Decode(&uploadURL)
-	f.URL = uploadURL.UploadURL
-	f.AuthToken = uploadURL.AuthorizationToken
+	var success bool
+	for !success {
+		var uploadURL B2UploadURL
+		fileID := map[string]string{"fileId": f.ParentFileID}
+		body, _ := json.Marshal(fileID)
+		client := &http.Client{}
+		url := instance.APIURL + "/b2api/v1/b2_get_upload_part_url"
+		req, err := http.NewRequest("POST", url, bytes.NewReader(body))
+		if err != nil {
+			log.Println("An error occured uploading part ", f.Number, " for file ", f.FileName)
 
+		}
+		req.Header.Set("Authorization", instance.AuthToken)
+		resp, err := client.Do(req)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			json.NewDecoder(resp.Body).Decode(&uploadURL)
+			resp.Body.Close()
+			f.URL = uploadURL.UploadURL
+			f.AuthToken = uploadURL.AuthorizationToken
+			success = true
+		}
+	}
 }
 
 func (f *FilePart) b2UploadPart() int {
