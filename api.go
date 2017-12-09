@@ -17,8 +17,8 @@ type Person struct {
 
 type APIStatus struct {
 	APIFiles   []APIFile
-	TotalFiles int
-	Percentage int
+	TotalFiles float32
+	Percentage float32
 }
 
 type APIFile struct {
@@ -67,6 +67,7 @@ func testtemplate(w http.ResponseWriter, r *http.Request) {
 	// files := fileCompleteQueue.Files
 	for _, folder := range config.Folders {
 		listFiles := getFiles(folder.RootFolder)
+		folder.b2Files.b2GetCurrentFiles(*folder)
 		totalFiles = len(listFiles)
 		completedFiles = 0
 		for _, file := range listFiles {
@@ -86,8 +87,8 @@ func testtemplate(w http.ResponseWriter, r *http.Request) {
 			fileStat.FileName = file[1:]
 			fileStatus.APIFiles = append(fileStatus.APIFiles, fileStat)
 		}
-		fileStatus.TotalFiles = totalFiles
-		fileStatus.Percentage = (completedFiles / totalFiles) //* 100
+		fileStatus.TotalFiles = float32(totalFiles)
+		fileStatus.Percentage = (float32(completedFiles) / float32(totalFiles)) * 100
 		t.Execute(w, fileStatus)
 	}
 }
