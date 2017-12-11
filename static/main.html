@@ -1,8 +1,6 @@
-<p>main content</p>
-<p>The files in Backblaze are:</p>
-<p>There are a total of {{.TotalFiles}} files being watched</p>
-<p>You are at {{.Percentage}}% Covered</p>
+<p>There are a total of {{.TotalFiles}} files and</p>
+<p>You are at {{.Percentage}}% backed up</p>
 {{range .APIFiles}}
-<h3> The file name is <font {{if .Uploaded}}color="green"{{else}}color="red"{{end}}>{{.FileName}}</font></h3>
+<h4 class="files"> The file name is <font {{if .Uploaded}}color="green"{{else}}color="red"{{end}}line_height=20px>{{.FileName}}</font></h4>
 {{end}}
 <!-- <div>Lampe0: <input type="text" name="Lampe0" value={{ index . 0 }} maxlength="6"></div> -->

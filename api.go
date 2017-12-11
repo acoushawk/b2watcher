@@ -1,14 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"gorilla/mux"
 	"html/template"
 	"net/http"
+	"path/filepath"
 )
 
 type APIConfig struct {
-	IPAddress string
-	port      int
+	StaticFiles string `yaml:"static_files"`
+	BindIP      string `yaml:"bind_ip"`
+	Port        string `yaml:"port"`
 }
 
 type Person struct {
@@ -34,7 +37,8 @@ func api() {
 	r.HandleFunc("/temp", testtemplate)
 
 	// Bind to a port and pass our router in
-	http.ListenAndServe(":8000", r)
+	fmt.Println("Bind ip ", config.API.BindIP, " and port ", config.API.Port)
+	http.ListenAndServe((config.API.BindIP + ":" + config.API.Port), r)
 }
 
 func files(w http.ResponseWriter, r *http.Request) {
@@ -63,9 +67,10 @@ func files(w http.ResponseWriter, r *http.Request) {
 func testtemplate(w http.ResponseWriter, r *http.Request) {
 	var fileStatus APIStatus
 	var completedFiles, totalFiles int
-	t := template.Must(template.ParseFiles("/Users/matthewarmstrong/scripts/backblaze-go/src/backblaze/static/main.html"))
+	t := template.Must(template.ParseFiles(filepath.Join(config.API.StaticFiles, "static/main.html")))
 	// files := fileCompleteQueue.Files
 	for _, folder := range config.Folders {
+		w.Write([]byte("<h1>Folder " + folder.RootFolder + "</h1>\n"))
 		listFiles := getFiles(folder.RootFolder)
 		folder.b2Files.b2GetCurrentFiles(*folder)
 		totalFiles = len(listFiles)

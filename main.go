@@ -131,6 +131,8 @@ func (c *Config) initialScan() {
 
 func (c *Config) parseConfig() {
 	configFile, _ := ioutil.ReadFile(*configFilePath)
+	config.API.BindIP = "0.0.0.0"
+	config.API.Port = "8000"
 	err := yaml.UnmarshalStrict(configFile, &config)
 	if err != nil {
 		fmt.Println("There was an error reading the config file. Error was ", err)

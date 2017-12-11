@@ -9,6 +9,7 @@ import (
 	"math"
 	"net/url"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -21,7 +22,7 @@ var fileCompleteQueue FileQueue
 
 func daemon() {
 	var monitor bool
-	f, err := os.OpenFile((config.LogDir + "/b2watcher.log"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	f, err := os.OpenFile(filepath.Join(config.LogDir, "/b2watcher.log"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -74,7 +75,7 @@ func getSHA() {
 		select {
 		case file := <-getSHAChan:
 			log.Println("Starting File - ", file.FilePath)
-			f, err := os.Open(file.RootPath + "/" + file.FilePath)
+			f, err := os.Open(filepath.Join(file.RootPath, file.FilePath))
 			if err != nil {
 				log.Fatal(err)
 			}

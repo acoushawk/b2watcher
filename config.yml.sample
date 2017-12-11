@@ -2,6 +2,10 @@ account_id: ********
 app_key: **************************
 con_connections: 4
 log_dir: /var/log
+api:
+  static_files:
+  bind_ip: 0.0.0.0
+  port: 8000
 folders:
   - bucket_id: **************
     b2_folder: Testing
