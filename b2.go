@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -159,7 +160,7 @@ func (f *FilePart) b2UploadPart() int {
 	bufferUp = make([]byte, f.ChunkSize)
 	openFile, _ := os.Open(f.Path)
 	seek := ((f.Number - 1) * instance.RecPartSize)
-	openFile.Seek(seek, 0)
+	openFile.Seek(seek, io.SeekStart)
 	// go func() {
 	openFile.Read(bufferUp)
 	// }()

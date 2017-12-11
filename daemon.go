@@ -92,7 +92,7 @@ func getSHA() {
 					if (file.FileSize - bytesSent) < chunkSize {
 						chunkSize = file.FileSize - bytesSent
 					}
-					f.Seek((bytesSent), 0)
+					f.Seek((bytesSent), io.SeekStart)
 					buffer = make([]byte, chunkSize)
 					h := sha1.New()
 					f.Read(buffer)

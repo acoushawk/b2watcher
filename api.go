@@ -1,10 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"gorilla/mux"
 	"html/template"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 )
 
@@ -35,9 +36,9 @@ func api() {
 	// Routes consist of a path and a handler function.
 	r.HandleFunc("/", files)
 	r.HandleFunc("/temp", testtemplate)
+	r.HandleFunc("/progress", progress)
 
 	// Bind to a port and pass our router in
-	fmt.Println("Bind ip ", config.API.BindIP, " and port ", config.API.Port)
 	http.ListenAndServe((config.API.BindIP + ":" + config.API.Port), r)
 }
 
@@ -62,6 +63,18 @@ func files(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+}
+
+func progress(w http.ResponseWriter, r *http.Request) {
+	file, _ := os.Open(filepath.Join(config.LogDir, "b2watcher.log"))
+	defer file.Close()
+	buf, _ := ioutil.ReadAll(file)
+	w.Write(buf)
+	// for n := 1; n < 200; n++ {
+	// 	line, _, _ := reader.ReadLine()
+	// 	// w.Write(buf)
+	// 	io.WriteString(w, (string(line) + "\n"))
+	// }
 }
 
 func testtemplate(w http.ResponseWriter, r *http.Request) {
