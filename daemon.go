@@ -74,7 +74,7 @@ func getSHA() {
 	for {
 		select {
 		case file := <-getSHAChan:
-			log.Println("Starting File - ", file.FilePath)
+			log.Println("Generating SHA for - ", file.FilePath)
 			f, err := os.Open(filepath.Join(file.RootPath, file.FilePath))
 			if err != nil {
 				log.Fatal(err)
@@ -86,7 +86,6 @@ func getSHA() {
 				chunkSize := instance.RecPartSize
 				totalPartsNum := uint64(math.Ceil(float64(file.FileSize) / float64(instance.RecPartSize)))
 				for i := int64(0); i < int64(totalPartsNum); i++ {
-					log.Println("Working on part", i, " of file ", file.FilePath)
 					var filePart FilePart
 					var buffer []byte
 					if (file.FileSize - bytesSent) < chunkSize {
@@ -126,7 +125,7 @@ func getSHA() {
 			}
 			fileSHA := fmt.Sprintf("%x", h.Sum(nil))
 			file.SHA = fileSHA
-			log.Println("Starting upload of ", file.FilePath)
+			log.Println("Finished SHA cal and adding ", file.FilePath, " to queue")
 			processFileChan <- file
 			f.Close()
 		}
@@ -151,9 +150,6 @@ func sendFile() {
 				}
 			} else {
 				file.b2StartLargeFile()
-				// for i := 1; i <= len(file.Parts); i++ {
-				// 	file.b2UploadPartURL()
-				// }
 				fileCompleteQueue.addFile(file)
 				for _, part := range file.Parts {
 					part.ParentFileID = file.FileID
@@ -169,24 +165,26 @@ func sendFilePart() {
 	for {
 		select {
 		case filePart := <-uploadFilePart:
+			var success bool
 			var result int
-			if (filePart.Number == 1) && (filePart.ChunkSize < instance.RecPartSize) {
-				result = filePart.b2UploadFile()
-			} else {
-				filePart.b2UploadPartURL()
-				result = filePart.b2UploadPart()
-			}
-			if result == 200 {
-				log.Println("Finished Part ", filePart.Number, " of file ", filePart.Path)
-				filePart.Complete = true
-				completedFileChan <- filePart
-			} else if result == 401 {
-				// bad auth token
-				instance.b2Authorize()
-				filePart.b2UploadPartURL()
-				result = filePart.b2UploadPart()
-			} else if result == 400 {
-				// bad request
+			for !success {
+				if (filePart.Number == 1) && (filePart.ChunkSize < instance.RecPartSize) {
+					result = filePart.b2UploadFile()
+				} else {
+					filePart.b2UploadPartURL()
+					result = filePart.b2UploadPart()
+				}
+				if result == 200 {
+					log.Println("Finished Part ", filePart.Number, " of file ", filePart.Path)
+					filePart.Complete = true
+					completedFileChan <- filePart
+					success = true
+				} else if result == 401 {
+					// bad auth token
+					instance.b2Authorize()
+				} else {
+					// Someting went wrong.. let's try again.
+				}
 			}
 		}
 	}

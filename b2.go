@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"strconv"
 )
@@ -106,10 +105,11 @@ func (f *B2ListFiles) b2GetCurrentFiles(folder Folders) {
 
 func (f *File) b2StartLargeFile() {
 	var largeFileInfo B2StartLargeFile
-	b2FileName, _ := url.Parse(f.B2Path + "/" + f.FilePath)
+	// b2FileName, _ := url.Parse(f.B2Path + "/" + f.FilePath)
 	largeFileInfo = B2StartLargeFile{
-		BucketID:    f.BucketID,
-		FileName:    b2FileName.String(),
+		BucketID: f.BucketID,
+		FileName: (f.B2Path + "/" + f.FilePath),
+		// FileName:    b2FileName.String(), // getting encoding issues. Removing this as a test
 		ContentType: "b2/x-auto",
 		FileInfo: B2FileInfo{
 			LargeFileSHA: f.SHA,

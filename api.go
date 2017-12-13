@@ -35,49 +35,26 @@ func api() {
 	r := mux.NewRouter()
 	// Routes consist of a path and a handler function.
 	r.HandleFunc("/", files)
-	r.HandleFunc("/temp", testtemplate)
-	r.HandleFunc("/progress", progress)
+	r.HandleFunc("/status", status)
+	r.HandleFunc("/log", readLog)
 
 	// Bind to a port and pass our router in
 	http.ListenAndServe((config.API.BindIP + ":" + config.API.Port), r)
 }
 
 func files(w http.ResponseWriter, r *http.Request) {
-	for _, folder := range config.Folders {
-		folder.b2Files.b2GetCurrentFiles(*folder)
-		listFiles := getFiles(folder.RootFolder)
-		for _, file := range listFiles {
-			var found bool
-			for _, file2 := range folder.b2Files.Files {
-				if (folder.B2Folder + file) == file2.FileName {
-					found = true
-				}
-			}
-			if !found {
-				var newFile File
-				newFile.RootPath = folder.RootFolder
-				newFile.B2Path = folder.B2Folder
-				newFile.FilePath = file[1:]
-				newFile.BucketID = folder.BucketID
-				w.Write([]byte(newFile.FilePath + "\n"))
-			}
-		}
-	}
+	w.Write([]byte("Please see the documentation for using this api/webserver\n"))
 }
 
-func progress(w http.ResponseWriter, r *http.Request) {
+func readLog(w http.ResponseWriter, r *http.Request) {
 	file, _ := os.Open(filepath.Join(config.LogDir, "b2watcher.log"))
 	defer file.Close()
 	buf, _ := ioutil.ReadAll(file)
 	w.Write(buf)
-	// for n := 1; n < 200; n++ {
-	// 	line, _, _ := reader.ReadLine()
-	// 	// w.Write(buf)
-	// 	io.WriteString(w, (string(line) + "\n"))
-	// }
+
 }
 
-func testtemplate(w http.ResponseWriter, r *http.Request) {
+func status(w http.ResponseWriter, r *http.Request) {
 	var fileStatus APIStatus
 	var completedFiles, totalFiles int
 	t := template.Must(template.ParseFiles(filepath.Join(config.API.StaticFiles, "static/main.html")))
