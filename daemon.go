@@ -184,6 +184,8 @@ func sendFilePart() {
 					instance.b2Authorize()
 				} else {
 					// Someting went wrong.. let's try again.
+					log.Println("There was an error in the send. Retrying part ", filePart.Number)
+					log.Println("The error was ", result)
 				}
 			}
 		}
