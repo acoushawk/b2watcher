@@ -177,6 +177,9 @@ func (f *FilePart) b2UploadPart() int {
 		fmt.Println("Error in send")
 		fmt.Println(err)
 		openFile.Close()
+		if resp == nil {
+			return 999
+		}
 		return resp.StatusCode
 	}
 	resp.Body.Close()
@@ -241,6 +244,9 @@ func (f *FilePart) b2UploadFile() int {
 	if err != nil {
 		log.Println("There was an error sending part ", f.Number, " of file ", f.FileName)
 		openFile.Close()
+		if resp == nil {
+			return 999
+		}
 		return resp.StatusCode
 	}
 	openFile.Close()
