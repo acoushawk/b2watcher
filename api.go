@@ -55,11 +55,11 @@ func readLog(w http.ResponseWriter, r *http.Request) {
 }
 
 func status(w http.ResponseWriter, r *http.Request) {
-	var fileStatus APIStatus
-	var completedFiles, totalFiles int
 	t := template.Must(template.ParseFiles(filepath.Join(config.API.StaticFiles, "static/main.html")))
 	// files := fileCompleteQueue.Files
 	for _, folder := range config.Folders {
+		var fileStatus APIStatus
+		var completedFiles, totalFiles int
 		w.Write([]byte("<h1>Folder " + folder.RootFolder + "</h1>\n"))
 		listFiles := getFiles(folder.RootFolder)
 		folder.b2Files.b2GetCurrentFiles(*folder)

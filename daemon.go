@@ -63,6 +63,11 @@ func daemon() {
 					fileCompleteQueue.removeFile(file)
 				}
 			}
+			if (len(getSHAChan) == 0) && (len(processFileChan) == 0) && (len(completedFileChan) == 0) && (len(fileCompleteQueue.Files) != 0) {
+				for _, file := range fileCompleteQueue.Files {
+					fileCompleteQueue.removeFile(file)
+				}
+			}
 		case <-exitChan:
 			log.Println("Finished processing files, no folders set to monitor. Closing")
 			os.Exit(0)
@@ -167,7 +172,12 @@ func sendFilePart() {
 		case filePart := <-uploadFilePart:
 			var success bool
 			var result int
+			tries := 0
 			for !success {
+				if tries == 5 {
+					log.Println("Amount of tries for file ", filePart.Path, " has been reached. Skipping file.")
+					break
+				}
 				if (filePart.Number == 1) && (filePart.ChunkSize < instance.RecPartSize) {
 					result = filePart.b2UploadFile()
 				} else {
@@ -183,6 +193,7 @@ func sendFilePart() {
 					// bad auth token
 					instance.b2Authorize()
 				} else {
+					tries++
 					// Someting went wrong.. let's try again.
 					// We need a better resolution here. 400 error will kill the app
 					// 999 means there was an issue talking to backblaze, need better handling
@@ -199,19 +210,25 @@ func folderMonitor(folder *Folders) {
 		initialTime := time.Now()
 		scanTime := ((time.Hour * time.Duration(folder.Hour)) + (time.Minute * time.Duration(folder.Minute)))
 		time.Sleep(scanTime)
-		var listFiles []string
-		listFiles = getFiles(folder.RootFolder)
-		for _, file := range listFiles {
-			fileStat, _ := os.Stat(folder.RootFolder + "/" + file)
-			fileTime := fileStat.ModTime()
-			newFile := fileTime.After(initialTime)
-			if newFile {
-				var newFile File
-				newFile.RootPath = folder.RootFolder
-				newFile.B2Path = folder.B2Folder
-				newFile.FilePath = file[1:]
-				newFile.BucketID = folder.BucketID
-				getSHAChan <- newFile
+		if (len(getSHAChan) == 0) && (len(processFileChan) == 0) && (len(completedFileChan) == 0) && (len(fileCompleteQueue.Files) == 0) {
+			var listFiles []string
+			listFiles = getFiles(folder.RootFolder)
+			for _, file := range listFiles {
+				fileStat, err := os.Stat(folder.RootFolder + "/" + file)
+				if err != nil {
+					log.Println("Error getting file stats for ", file, " error was ", err)
+					break
+				}
+				fileTime := fileStat.ModTime()
+				newFile := fileTime.After(initialTime)
+				if newFile {
+					var newFile File
+					newFile.RootPath = folder.RootFolder
+					newFile.B2Path = folder.B2Folder
+					newFile.FilePath = file[1:]
+					newFile.BucketID = folder.BucketID
+					getSHAChan <- newFile
+				}
 			}
 		}
 	}
