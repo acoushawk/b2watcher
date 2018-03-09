@@ -212,6 +212,8 @@ func folderMonitor(folder *Folders) {
 		time.Sleep(scanTime)
 		if (len(getSHAChan) == 0) && (len(processFileChan) == 0) && (len(completedFileChan) == 0) && (len(fileCompleteQueue.Files) == 0) {
 			log.Println("Scanning folder ", folder.RootFolder, " for new files")
+			log.Println("initial time was ", initialTime)
+			log.Println("Scan Time is", scanTime)
 			var listFiles []string
 			listFiles = getFiles(folder.RootFolder)
 			for _, file := range listFiles {
@@ -223,6 +225,7 @@ func folderMonitor(folder *Folders) {
 				fileTime := fileStat.ModTime()
 				newFile := fileTime.After(initialTime)
 				if newFile {
+					log.Println("found this new file ", file)
 					var newFile File
 					newFile.RootPath = folder.RootFolder
 					newFile.B2Path = folder.B2Folder
