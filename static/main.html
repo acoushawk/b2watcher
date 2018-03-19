@@ -1,9 +1,22 @@
 <p>There are a total of {{.TotalFiles}} files and</p>
 <p>You are at {{.Percentage}}% backed up</p>
 <p>Current queue has {{.QueueCount}} Files in Queue</p>
-<p>Current Files in queue are {{range .Queue}} ,{{FilePath}}{{end}}</p>
-<p>Clear Queue <button onclick="loadMore()">Load more</button></p>
+<p>Current Files in queue are {{range $index, $file := .Queue}}{{if $index}},{{end}}{{$file.FilePath}}{{end}}</p>
+<p><button onclick="clearQueue()">Clear Queue</button></p>
 {{range .APIFiles}}
 <h4 class="files"> The file name is <font {{if .Uploaded}}color="green"{{else}}color="red"{{end}}line_height=20px>{{.FileName}}</font></h4>
 {{end}}
 <!-- <div>Lampe0: <input type="text" name="Lampe0" value={{ index . 0 }} maxlength="6"></div> -->
+
+<script>
+    function clearQueue() {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                e.outerHTML = xhr.responseText;
+            }
+        }
+        xhr.open("GET", "/status/clearqueue", true);
+        try { xhr.send(); } catch (err) { /* handle error */ }
+    }
+</script>

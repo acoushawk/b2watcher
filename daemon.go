@@ -53,6 +53,14 @@ func daemon() {
 					if part.Complete == false {
 						complete = false
 					}
+					if part.SHA == "" {
+						// THIS IS WHERE WE NEED TO DECIDE HOW TO FIX BAD UPLOADS
+						// PROBABLY A FULL DELETE IN B2 THEN A FULL REUP
+						status := file.b2CancelLargeFile()
+						if status == 200 {
+							fileCompleteQueue.removeFile(file)
+						}
+					}
 				}
 				if (complete == true) && len(file.Parts) == 1 {
 					log.Println("Finished sending file ", file.FilePath)
@@ -63,11 +71,6 @@ func daemon() {
 					fileCompleteQueue.removeFile(file)
 				}
 			}
-			// if (len(getSHAChan) == 0) && (len(processFileChan) == 0) && (len(completedFileChan) == 0) && (len(fileCompleteQueue.Files) != 0) {
-			// 	for _, file := range fileCompleteQueue.Files {
-			// 		fileCompleteQueue.removeFile(file)
-			// 	}
-			// }
 		case <-exitChan:
 			log.Println("Finished processing files, no folders set to monitor. Closing")
 			os.Exit(0)
@@ -176,6 +179,8 @@ func sendFilePart() {
 			for !success {
 				if tries == 5 {
 					log.Println("Amount of tries for file ", filePart.Path, " has been reached. Skipping file.")
+					filePart.SHA = ""
+					completedFileChan <- filePart
 					break
 				}
 				if (filePart.Number == 1) && (filePart.ChunkSize < instance.RecPartSize) {

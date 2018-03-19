@@ -61,6 +61,10 @@ type B2FinishLargeFile struct {
 	PartSha1Array []string `json:"partSha1Array"`
 }
 
+type B2CancelLargeFile struct {
+	FileID string `json:"fileId"`
+}
+
 var instance B2Instance
 
 func (b *B2Instance) b2Authorize() {
@@ -174,8 +178,7 @@ func (f *FilePart) b2UploadPart() int {
 	client := http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Error in send")
-		fmt.Println(err)
+		log.Println("Error in send of upload part - ", err)
 		openFile.Close()
 		if resp == nil {
 			return 999
@@ -250,5 +253,20 @@ func (f *FilePart) b2UploadFile() int {
 		return resp.StatusCode
 	}
 	openFile.Close()
+	return resp.StatusCode
+}
+
+func (f *File) b2CancelLargeFile() int {
+	var b2Cancel B2CancelLargeFile
+	b2Cancel.FileID = f.FileID
+	body, _ := json.Marshal(b2Cancel)
+	client := &http.Client{}
+	url := instance.APIURL + "/b2api/v1/b2_cancel_large_file"
+	req, _ := http.NewRequest("POST", url, bytes.NewReader(body))
+	req.Header.Set("Authorization", instance.AuthToken)
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println("Error canceling file - ", err)
+	}
 	return resp.StatusCode
 }
