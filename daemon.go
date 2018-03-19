@@ -63,11 +63,11 @@ func daemon() {
 					fileCompleteQueue.removeFile(file)
 				}
 			}
-			if (len(getSHAChan) == 0) && (len(processFileChan) == 0) && (len(completedFileChan) == 0) && (len(fileCompleteQueue.Files) != 0) {
-				for _, file := range fileCompleteQueue.Files {
-					fileCompleteQueue.removeFile(file)
-				}
-			}
+			// if (len(getSHAChan) == 0) && (len(processFileChan) == 0) && (len(completedFileChan) == 0) && (len(fileCompleteQueue.Files) != 0) {
+			// 	for _, file := range fileCompleteQueue.Files {
+			// 		fileCompleteQueue.removeFile(file)
+			// 	}
+			// }
 		case <-exitChan:
 			log.Println("Finished processing files, no folders set to monitor. Closing")
 			os.Exit(0)
@@ -210,6 +210,7 @@ func folderMonitor(folder *Folders) {
 		initialTime := time.Now()
 		scanTime := ((time.Hour * time.Duration(folder.Hour)) + (time.Minute * time.Duration(folder.Minute)))
 		time.Sleep(scanTime)
+		fmt.Println(len(processFileChan), " ", len(fileCompleteQueue.Files))
 		if (len(getSHAChan) == 0) && (len(processFileChan) == 0) && (len(completedFileChan) == 0) && (len(fileCompleteQueue.Files) == 0) {
 			log.Println("Scanning folder ", folder.RootFolder, " for new files")
 			log.Println("initial time was ", initialTime)

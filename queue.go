@@ -29,3 +29,9 @@ func (q *FileQueue) removeFile(file File) {
 		}
 	}
 }
+
+func (q *FileQueue) clearQueue() {
+	for _, f := range q.Files {
+		q.removeFile(f)
+	}
+}

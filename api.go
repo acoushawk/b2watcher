@@ -23,6 +23,8 @@ type APIStatus struct {
 	APIFiles   []APIFile
 	TotalFiles float32
 	Percentage float32
+	Queue      []File
+	QueueCount int
 }
 
 type APIFile struct {
@@ -57,6 +59,7 @@ func readLog(w http.ResponseWriter, r *http.Request) {
 func status(w http.ResponseWriter, r *http.Request) {
 	t := template.Must(template.ParseFiles(filepath.Join(config.API.StaticFiles, "static/main.html")))
 	// files := fileCompleteQueue.Files
+
 	for _, folder := range config.Folders {
 		var fileStatus APIStatus
 		var completedFiles, totalFiles int
@@ -84,6 +87,8 @@ func status(w http.ResponseWriter, r *http.Request) {
 		}
 		fileStatus.TotalFiles = float32(totalFiles)
 		fileStatus.Percentage = (float32(completedFiles) / float32(totalFiles)) * 100
+		fileStatus.Queue = fileCompleteQueue.Files
+		fileStatus.QueueCount = len(fileCompleteQueue.Files)
 		t.Execute(w, fileStatus)
 	}
 }
