@@ -199,6 +199,7 @@ func sendFilePart() {
 					instance.b2Authorize()
 				} else {
 					tries++
+					instance.b2Authorize()
 					// Someting went wrong.. let's try again.
 					// We need a better resolution here. 400 error will kill the app
 					// 999 means there was an issue talking to backblaze, need better handling
