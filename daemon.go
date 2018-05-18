@@ -213,32 +213,21 @@ func sendFilePart() {
 
 func folderMonitor(folder *Folders) {
 	for {
-		initialTime := time.Now()
 		scanTime := ((time.Hour * time.Duration(folder.Hour)) + (time.Minute * time.Duration(folder.Minute)))
 		time.Sleep(scanTime)
-		fmt.Println(len(processFileChan), " ", len(fileCompleteQueue.Files))
 		if (len(getSHAChan) == 0) && (len(processFileChan) == 0) && (len(completedFileChan) == 0) && (len(fileCompleteQueue.Files) == 0) {
-			log.Println("Scanning folder ", folder.RootFolder, " for new files")
-			log.Println("initial time was ", initialTime)
-			log.Println("Scan Time is", scanTime)
-			var listFiles []string
-			listFiles = getFiles(folder.RootFolder)
+			listFiles := getFiles(folder.RootFolder)
+			folder.b2Files.b2GetCurrentFiles(*folder)
 			for _, file := range listFiles {
-				fileStat, err := os.Stat(folder.RootFolder + "/" + file)
-				if err != nil {
-					log.Println("Error getting file stats for ", file, " error was ", err)
-					break
-				}
-				fileTime := fileStat.ModTime()
-				newFile := fileTime.After(initialTime)
-				if newFile {
-					log.Println("found this new file ", file)
-					var newFile File
-					newFile.RootPath = folder.RootFolder
-					newFile.B2Path = folder.B2Folder
-					newFile.FilePath = file[1:]
-					newFile.BucketID = folder.BucketID
-					getSHAChan <- newFile
+				for _, file2 := range folder.b2Files.Files {
+					if (folder.B2Folder + file) != file2.FileName {
+						var newFile File
+						newFile.RootPath = folder.RootFolder
+						newFile.B2Path = folder.B2Folder
+						newFile.FilePath = file[1:]
+						newFile.BucketID = folder.BucketID
+						getSHAChan <- newFile
+					}
 				}
 			}
 		}

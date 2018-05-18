@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 func (q *FileQueue) addFile(file File) {
 	q.Lock()
 	defer q.Unlock()
@@ -25,6 +27,8 @@ func (q *FileQueue) removeFile(file File) {
 	defer q.Unlock()
 	for i, queuefile := range q.Files {
 		if queuefile.FilePath == file.FilePath {
+			fmt.Println("removing slice ", i)
+			fmt.Println("total slices ", len(q.Files))
 			q.Files = append(q.Files[:i], q.Files[i+1:]...)
 		}
 	}
