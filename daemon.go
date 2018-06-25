@@ -15,7 +15,7 @@ import (
 
 var getSHAChan = make(chan File, 5)
 var processFileChan = make(chan File, 5)
-var completedFileChan = make(chan FilePart)
+var completedFileChan = make(chan FilePart, 1)
 var uploadFilePart = make(chan FilePart)
 var exitChan = make(chan bool)
 var fileCompleteQueue FileQueue
