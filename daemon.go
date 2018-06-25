@@ -59,6 +59,7 @@ func daemon() {
 						status := file.b2CancelLargeFile()
 						if status == 200 {
 							fileCompleteQueue.removeFile(file)
+							complete = false
 						}
 					}
 				}

@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 func (q *FileQueue) addFile(file File) {
 	q.Lock()
@@ -29,6 +32,8 @@ func (q *FileQueue) removeFile(file File) {
 		if queuefile.FilePath == file.FilePath {
 			fmt.Println("removing slice ", i)
 			fmt.Println("total slices ", len(q.Files))
+			fmt.Println("Files in queue", q)
+			fmt.Println("timestamp", time.Now())
 			q.Files = append(q.Files[:i], q.Files[i+1:]...)
 		}
 	}
