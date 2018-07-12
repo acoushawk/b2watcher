@@ -13,14 +13,15 @@ import (
 	"time"
 )
 
-var getSHAChan = make(chan File, 5)
+var getSHAChan = make(chan File)
 var processFileChan = make(chan File, 5)
-var completedFileChan = make(chan FilePart, 1)
+var completedFileChan = make(chan FilePart)
 var uploadFilePart = make(chan FilePart)
 var exitChan = make(chan bool)
 var fileCompleteQueue FileQueue
 
 func daemon() {
+
 	var monitor bool
 	f, err := os.OpenFile(filepath.Join(config.LogDir, "/b2watcher.log"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
@@ -220,15 +221,19 @@ func folderMonitor(folder *Folders) {
 			listFiles := getFiles(folder.RootFolder)
 			folder.b2Files.b2GetCurrentFiles(*folder)
 			for _, file := range listFiles {
+				var found bool
 				for _, file2 := range folder.b2Files.Files {
-					if (folder.B2Folder + file) != file2.FileName {
-						var newFile File
-						newFile.RootPath = folder.RootFolder
-						newFile.B2Path = folder.B2Folder
-						newFile.FilePath = file[1:]
-						newFile.BucketID = folder.BucketID
-						getSHAChan <- newFile
+					if (folder.B2Folder + file) == file2.FileName {
+						found = true
 					}
+				}
+				if !found {
+					var newFile File
+					newFile.RootPath = folder.RootFolder
+					newFile.B2Path = folder.B2Folder
+					newFile.FilePath = file[1:]
+					newFile.BucketID = folder.BucketID
+					getSHAChan <- newFile
 				}
 			}
 		}

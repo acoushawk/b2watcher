@@ -66,7 +66,6 @@ var configFilePath *string
 var config Config
 
 func main() {
-
 	getFlags()
 	config.parseConfig()
 	instance.b2Authorize()

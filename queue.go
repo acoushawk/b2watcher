@@ -1,10 +1,5 @@
 package main
 
-import (
-	"fmt"
-	"time"
-)
-
 func (q *FileQueue) addFile(file File) {
 	q.Lock()
 	defer q.Unlock()
@@ -26,17 +21,15 @@ func (q *FileQueue) updateFile(filePart FilePart) {
 }
 
 func (q *FileQueue) removeFile(file File) {
+	var filenum int
 	q.Lock()
 	defer q.Unlock()
 	for i, queuefile := range q.Files {
 		if queuefile.FilePath == file.FilePath {
-			fmt.Println("removing slice ", i)
-			fmt.Println("total slices ", len(q.Files))
-			fmt.Println("Files in queue", q)
-			fmt.Println("timestamp", time.Now())
-			q.Files = append(q.Files[:i], q.Files[i+1:]...)
+			filenum = i
 		}
 	}
+	q.Files = append(q.Files[:filenum], q.Files[filenum+1:]...)
 }
 
 func (q *FileQueue) clearQueue() {
