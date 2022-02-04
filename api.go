@@ -1,10 +1,11 @@
 package main
 
 import (
-	"gorilla/mux"
 	"html/template"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type APIConfig struct {
